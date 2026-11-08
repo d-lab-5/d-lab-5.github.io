@@ -39,6 +39,14 @@ refuses a mismatch. Then run the workflow, or wait for the night.
 
 `.github/workflows/build.yml` runs nightly at 03:17 UTC, on a push to `main`,
 and on *Run workflow*.
+- **Each product builds in a job of its own.** A product's build runs that
+  product's code, so the job has no token and only that product's cache, and
+  `npm ci` runs with `--ignore-scripts`. It hands over only its folder.
+- **The assemble job runs no product code.** It takes from each folder only
+  regular files of the types the template writes, and puts them under that
+  product's path. A symlink, another type of file, or a `site.json` naming
+  another product leaves the product out, named in the log.
+- **Actions are pinned to commit SHAs.**
 - **A product that fails keeps last night's copy,** taken from the Actions
   cache. Its card says so, and the run is marked failed.
 - **A product that has never built** is named in the log and left out.

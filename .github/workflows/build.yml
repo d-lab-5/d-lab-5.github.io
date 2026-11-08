@@ -1,7 +1,13 @@
 # Build docs.dlab5.net from sites.json and publish it: every night, on a push
-# to main, or at once with "Run workflow". Each product is cloned from its own
-# public repository, so a product needs nothing in this one but its line in
-# sites.json. A product that fails keeps last night's copy (from the cache).
+# to main, or at once with "Run workflow".
+#
+# A product's build runs that product's own code, so each runs in a job of its
+# own, with no token and only its own cache, and hands over only its folder.
+# The assemble job runs no product code: it takes from each folder only what
+# is safe and puts it under that product's path. A product that fails keeps
+# its last good copy (from its cache), and the run is marked failed.
+#
+# Actions are pinned to commit SHAs; the comment names the release.
 name: docs.dlab5.net
 
 on:
@@ -20,45 +26,92 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  plan:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
-      # the last good copy of every product, refreshed by each run
-      - uses: actions/cache/restore@v6
+      - id: m
+        run: echo "matrix=$(node scripts/build.mjs --matrix)" >> "$GITHUB_OUTPUT"
+
+  product:
+    needs: plan
+    if: needs.plan.outputs.matrix != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    name: ${{ matrix.product }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: cache
-          key: products-${{ github.run_id }}
-          restore-keys: products-
+          key: product-${{ matrix.part }}-${{ github.run_id }}
+          restore-keys: product-${{ matrix.part }}-
       - id: build
-        run: node scripts/build.mjs --out _site --cache cache
         continue-on-error: true
-      - run: node scripts/links.mjs _site
-      - uses: actions/cache/save@v6
-        if: github.event_name != 'pull_request'
+        run: node scripts/build.mjs --only "${{ matrix.product }}" --out out --cache cache
+      - uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: github.event_name != 'pull_request' && steps.build.outcome == 'success'
         with:
           path: cache
-          key: products-${{ github.run_id }}
-      - uses: actions/configure-pages@v6
+          key: product-${{ matrix.part }}-${{ github.run_id }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: hashFiles('out/site.json') != ''
+        with:
+          name: docs-part-${{ matrix.part }}
+          path: out
+          include-hidden-files: true
+          retention-days: 1
+      - if: steps.build.outcome == 'failure'
+        run: |
+          echo "::warning::${{ matrix.product }} did not build; see the build step"
+          exit 1
+
+  assemble:
+    needs: [plan, product]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    outputs:
+      outcome: ${{ steps.site.outcome }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: docs-part-*
+          path: parts
+      - id: site
+        continue-on-error: true
+        run: node scripts/build.mjs --assemble parts --out _site
+      - run: node scripts/links.mjs _site
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      - uses: actions/upload-pages-artifact@v5
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:
           path: _site
-      # published even when a product failed (it keeps its copy), but the run is marked
-      - if: steps.build.outcome == 'failure'
-        run: |
-          echo "::warning::a product did not build; see the build step"
-          exit 1
-    outputs:
-      built: ${{ steps.build.outcome }}
 
   deploy:
-    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.result != 'cancelled'
-    needs: build
+    needs: assemble
+    if: always() && needs.assemble.result == 'success' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -68,4 +121,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
