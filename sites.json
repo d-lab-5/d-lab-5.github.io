@@ -8,7 +8,9 @@
       "label": "D-LAB-5",
       "owner": "d-lab-5",
       "about": "The core: architecture blueprints, the templates clouds, edges and tools are made from, and what the other domains share.",
-      "products": []
+      "products": [
+        { "slug": "agent-skills", "repo": "d-lab-5/agent-skills-shared" }
+      ]
     },
     {
       "id": "digitalhome",
