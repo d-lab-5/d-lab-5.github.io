@@ -1,0 +1,19 @@
+/* docs.dlab5.net: dark first, light on request of the system. */
+:root { --bg: #0f1420; --panel: #171e2e; --text: #e7ebf3; --muted: #9ba6bd; --line: #2a3449; --accent: #5eb3f6; }
+@media (prefers-color-scheme: light) {
+  :root { --bg: #f6f7fb; --panel: #ffffff; --text: #172033; --muted: #566179; --line: #d9deea; --accent: #1f6fc5; }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+main { max-width: 960px; margin: 0 auto; padding: 40px 16px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 8px; }
+.lead { color: var(--muted); font-size: 17px; margin: 0 0 28px; }
+.sites { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.sites a { display: block; height: 100%; padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); text-decoration: none; }
+.sites a:hover { border-color: var(--accent); }
+.sites strong { display: block; font-size: 17px; }
+.sites span { color: var(--muted); font-size: 14px; }
+.sites small { display: block; margin-top: 6px; color: var(--accent); font-size: 13px; overflow-wrap: anywhere; }
+footer { max-width: 960px; margin: 0 auto; padding: 16px 16px 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); }
