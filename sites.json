@@ -1,0 +1,44 @@
+{
+  "title": "D-LAB-5 docs",
+  "lead": "Decisions, diagrams and references for the products of the D-LAB-5 development domains. Each product keeps its docs in a public repository made from template-dlab5-shared; this site builds them all, every night.",
+  "template": "d-lab-5/template-dlab5-shared",
+  "domains": [
+    {
+      "id": "d-lab-5",
+      "label": "D-LAB-5",
+      "owner": "d-lab-5",
+      "about": "The core: architecture blueprints, the templates clouds, edges and tools are made from, and what the other domains share.",
+      "products": []
+    },
+    {
+      "id": "digitalhome",
+      "label": "DigitalHome.Cloud",
+      "owner": "DigitalHome-cloud",
+      "about": "Homes and families on a cloud platform with edges in the house.",
+      "products": [
+        { "slug": "mediathek", "repo": "d-lab-5/mediathek-digitalhome-shared" }
+      ]
+    },
+    {
+      "id": "erp-lab-5",
+      "label": "ERP-LAB-5",
+      "owner": "ERP-LAB-5",
+      "about": "Tools and agents for enterprise systems, and the template small tools are made from.",
+      "products": []
+    },
+    {
+      "id": "atelier-5",
+      "label": "Atelier-5",
+      "owner": "Atelier-5",
+      "about": "Robots, their simulation, and the tools to program them.",
+      "products": []
+    },
+    {
+      "id": "artdecoris",
+      "label": "artdecoris labs",
+      "owner": "artdecoris-labs",
+      "about": "A shop's design system and theme.",
+      "products": []
+    }
+  ]
+}

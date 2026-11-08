@@ -1,0 +1,71 @@
+# Build docs.dlab5.net from sites.json and publish it: every night, on a push
+# to main, or at once with "Run workflow". Each product is cloned from its own
+# public repository, so a product needs nothing in this one but its line in
+# sites.json. A product that fails keeps last night's copy (from the cache).
+name: docs.dlab5.net
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      # the last good copy of every product, refreshed by each run
+      - uses: actions/cache/restore@v6
+        with:
+          path: cache
+          key: products-${{ github.run_id }}
+          restore-keys: products-
+      - id: build
+        run: node scripts/build.mjs --out _site --cache cache
+        continue-on-error: true
+      - run: node scripts/links.mjs _site
+      - uses: actions/cache/save@v6
+        if: github.event_name != 'pull_request'
+        with:
+          path: cache
+          key: products-${{ github.run_id }}
+      - uses: actions/configure-pages@v6
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      - uses: actions/upload-pages-artifact@v5
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          path: _site
+      # published even when a product failed (it keeps its copy), but the run is marked
+      - if: steps.build.outcome == 'failure'
+        run: |
+          echo "::warning::a product did not build; see the build step"
+          exit 1
+    outputs:
+      built: ${{ steps.build.outcome }}
+
+  deploy:
+    if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && needs.build.result != 'cancelled'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
