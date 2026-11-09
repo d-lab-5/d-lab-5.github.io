@@ -9,7 +9,8 @@
       "owner": "d-lab-5",
       "about": "The core: architecture blueprints, the templates clouds, edges and tools are made from, and what the other domains share.",
       "products": [
-        { "slug": "agent-skills", "repo": "d-lab-5/agent-skills-shared" }
+        { "slug": "agent-skills", "repo": "d-lab-5/agent-skills-shared" },
+        { "slug": "cloud-edge", "repo": "d-lab-5/cloud-edge-shared" }
       ]
     },
     {
@@ -26,7 +27,9 @@
       "label": "ERP-LAB-5",
       "owner": "ERP-LAB-5",
       "about": "Tools and agents for enterprise systems, and the template small tools are made from.",
-      "products": []
+      "products": [
+        { "slug": "ovs", "repo": "ERP-LAB-5/ovs-dlab5-shared" }
+      ]
     },
     {
       "id": "atelier-5",
