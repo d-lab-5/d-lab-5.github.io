@@ -10,7 +10,8 @@
       "about": "The core: architecture blueprints, the templates clouds, edges and tools are made from, and what the other domains share.",
       "products": [
         { "slug": "agent-skills", "repo": "d-lab-5/agent-skills-shared" },
-        { "slug": "cloud-edge", "repo": "d-lab-5/cloud-edge-shared" }
+        { "slug": "cloud-edge", "repo": "d-lab-5/cloud-edge-shared" },
+        { "slug": "maker-5", "repo": "d-lab-5/maker-5-shared" }
       ]
     },
     {
